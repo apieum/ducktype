@@ -29,6 +29,11 @@ class C(object):
     def method2(self, arg1, arg2=None):
         return None
 
+class D(object):
+    attr1 = False
+    method1 = None
+    method2 = None
+
 
 class DuckTypeTest(TestCase):
     def setUp(self):
@@ -46,23 +51,21 @@ class DuckTypeTest(TestCase):
         self.assertTrue(isducktype(A, B()))
         self.assertTrue(isducktype(A(), B()))
 
-    def test_a_routine_ducktype_another_when_it_has_at_least_same_number_of_args(self):
-        def func_a(a1, a2):
-            pass
-        def func_b(b1):
-            pass
+    def test_an_object_dont_ducktype_another_when_its_methods_are_just_attr(self):
+        self.assertFalse(isducktype(A, D))
+        self.assertFalse(isducktype(D, A))
 
-        self.assertFalse(isducktype(func_b, func_a))
-        self.assertTrue(isducktype(func_a, func_b))
+    def test_a_routine_ducktype_another_when_it_has_same_number_of_args(self):
+        func_a = lambda a1, a2=None: None
+        func_b = lambda b1: None
+        func_c = lambda c1, c2: None
 
-    def test_when_comparing_routines_kwargs_can_be_ignored(self):
-        def func_a(a1, a2=None):
-            pass
-        def func_b(b1):
-            pass
-
+        self.assertFalse(isducktype(func_b, func_c))
+        self.assertFalse(isducktype(func_c, func_b))
         self.assertTrue(isducktype(func_b, func_a))
         self.assertTrue(isducktype(func_a, func_b))
+        self.assertTrue(isducktype(func_c, func_a))
+        self.assertTrue(isducktype(func_a, func_c))
 
     def test_when_a_routine_as_varargs_or_keywords_its_always_a_duck_type(self):
         func_a = lambda *a1: None
@@ -93,5 +96,5 @@ class DuckTypeTest(TestCase):
     def a_duck_with_type_check(self, returns=True):
         duck = Mock()
         typecheck = Mock(return_value=returns)
-        setattr(duck, '__ducktypecheck__', typecheck)
+        duck.attach_mock(typecheck, '__ducktypecheck__')
         return duck, typecheck
